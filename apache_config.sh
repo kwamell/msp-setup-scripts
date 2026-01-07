@@ -1,2 +1,3 @@
-echo "<?php phpinfo(); ?>" | sudo tee /var/www/html/espo/public/phpinfo.php > /dev/null
-sudo chown www-data:www-data /var/www/html/espo/public/phpinfo.php
+sudo a2enmod rewrite
+sudo sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+sudo systemctl restart apache2
