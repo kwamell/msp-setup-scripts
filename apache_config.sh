@@ -1,20 +1,8 @@
-#!/bin/bash
-# =========================================
-# Fix Apache MPM for PHP (REQUIRED)
-# =========================================
+# Remove the bad "real file"
+sudo rm -f /etc/apache2/mods-enabled/dir.conf
 
-set -e
+# Re-enable the module properly (creates correct symlinks)
+sudo a2enmod dir
 
-echo "🛑 Disabling mpm_event..."
-sudo a2dismod mpm_event || true
-
-echo "✅ Enabling mpm_prefork..."
-sudo a2enmod mpm_prefork
-
-echo "🔄 Restarting Apache..."
+# Restart Apache
 sudo systemctl restart apache2
-
-echo "======================================"
-echo "✅ Apache MPM fixed for PHP"
-echo "🌐 Open: http://$(hostname -I | awk '{print $1}')/"
-echo "======================================"
