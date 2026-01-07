@@ -1,39 +1,50 @@
 #!/bin/bash
+# =========================================
+# Install MariaDB for EspoCRM (MySQL mode)
+# Creates:
+#   DB:   psa_db
+#   User: psa_user
+#   Pass: StrongPassword123 (change if you want)
+# =========================================
+
 set -e
 
-ESPODIR="/var/www/html/espo"
+DB_NAME="psa_db"
+DB_USER="psa_user"
+DB_PASS="StrongPassword123"
 
-echo "== Updating packages =="
-sudo apt update -y
+echo "✅ Installing MariaDB..."
+sudo apt update
+sudo apt install -y mariadb-server mariadb-client
 
-echo "== Installing PHP drivers Espo uses (unversioned packages) =="
-sudo apt install -y \
-  php-pgsql \
-  php-mysql \
-  php-zip \
-  php-gd \
-  php-mbstring \
-  php-curl \
-  php-xml
+echo "✅ Enabling and starting MariaDB..."
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
 
-echo "== Restarting Apache =="
-sudo systemctl restart apache2
+echo "✅ Setting MariaDB to listen on localhost only (safe default)..."
+# Most installs already bind to 127.0.0.1. This keeps it local-only.
+sudo sed -i 's/^\s*bind-address\s*=.*/bind-address = 127.0.0.1/' /etc/mysql/mariadb.conf.d/50-server.cnf || true
 
-echo "== Verifying PHP modules (must show pdo_pgsql) =="
-php -m | grep -E 'pdo_pgsql|pgsql' || true
-php -m | grep -E 'pdo_mysql|mysqli' || true
-php -m | grep -E 'zip|gd|mbstring|curl|xml' || true
+echo "✅ Restarting MariaDB..."
+sudo systemctl restart mariadb
 
-echo "== Checking PostgreSQL service =="
-sudo systemctl is-active --quiet postgresql && echo "PostgreSQL is running ✅" || echo "PostgreSQL is NOT running ❌"
+echo "✅ Creating database + user..."
+sudo mariadb <<EOF
+CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
+GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
+FLUSH PRIVILEGES;
+EOF
 
-echo "== Resetting Espo installer state (so DB options re-detect) =="
-# These files get created during a partially completed install
-sudo rm -f "$ESPODIR/data/config.php" "$ESPODIR/data/config-internal.php" || true
-sudo rm -rf "$ESPODIR/data/cache/*" || true
+echo "🧪 Testing login as ${DB_USER}..."
+mariadb -u "${DB_USER}" -p"${DB_PASS}" -e "SHOW DATABASES;" | head -n 20
 
-sudo chown -R www-data:www-data "$ESPODIR"
-
-echo "== Done =="
-echo "Now HARD refresh the installer page (Ctrl+F5) and check Database Type again."
-echo "If PostgreSQL still doesn't appear, run: psql --version and tell me the result."
+echo "======================================"
+echo "✅ MariaDB ready for EspoCRM installer"
+echo ""
+echo "In EspoCRM installer (MySQL):"
+echo "  Host Name: 127.0.0.1   (DO NOT use :5432)"
+echo "  Database Name: ${DB_NAME}"
+echo "  Database User Name: ${DB_USER}"
+echo "  Database User Password: ${DB_PASS}"
+echo "======================================"
