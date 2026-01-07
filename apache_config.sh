@@ -1,26 +1,37 @@
 #!/bin/bash
 # =========================================
-# Fix Apache Directory Traverse Permissions
+# Apache GLOBAL filesystem allow fix
 # =========================================
 
 set -e
 
-echo "🔐 Fixing parent directory permissions..."
+APACHE_MAIN="/etc/apache2/apache2.conf"
 
-sudo chmod 755 /var
-sudo chmod 755 /var/www
-sudo chmod 755 /var/www/html
-sudo chmod 755 /var/www/html/espo
-sudo chmod 755 /var/www/html/espo/public
-sudo chmod 755 /var/www/html/espo/client
+echo "📝 Backing up apache2.conf..."
+sudo cp $APACHE_MAIN ${APACHE_MAIN}.bak
 
-echo "👤 Ensuring ownership..."
-sudo chown -R www-data:www-data /var/www/html/espo
+echo "🔧 Appending global directory permissions..."
+
+sudo tee -a $APACHE_MAIN > /dev/null <<'EOF'
+
+# === EspoCRM Global Allow Fix ===
+<Directory /var/www/>
+    AllowOverride All
+    Require all granted
+</Directory>
+
+<Directory /var/www/html/>
+    AllowOverride All
+    Require all granted
+</Directory>
+# === End Fix ===
+
+EOF
 
 echo "🔄 Restarting Apache..."
 sudo systemctl restart apache2
 
 echo "======================================"
-echo "✅ Directory traversal permissions fixed"
+echo "✅ Apache global access fixed"
 echo "🌐 Open: http://$(hostname -I | awk '{print $1}')/"
 echo "======================================"
