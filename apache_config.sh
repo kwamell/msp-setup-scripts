@@ -1,14 +1,20 @@
-# See installed PHP versions
-php -v
+#!/bin/bash
+# =========================================
+# Fix Apache MPM for PHP (REQUIRED)
+# =========================================
 
-# Enable PHP module explicitly
-sudo a2enmod php*
+set -e
 
-# Ensure dir module is enabled
-sudo a2enmod dir
+echo "🛑 Disabling mpm_event..."
+sudo a2dismod mpm_event || true
 
-# Force DirectoryIndex to include index.php globally
-sudo sed -i 's/DirectoryIndex .*/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
+echo "✅ Enabling mpm_prefork..."
+sudo a2enmod mpm_prefork
 
-# Restart Apache
+echo "🔄 Restarting Apache..."
 sudo systemctl restart apache2
+
+echo "======================================"
+echo "✅ Apache MPM fixed for PHP"
+echo "🌐 Open: http://$(hostname -I | awk '{print $1}')/"
+echo "======================================"
