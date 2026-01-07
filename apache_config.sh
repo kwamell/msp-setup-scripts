@@ -1,8 +1,6 @@
 #!/bin/bash
 # =========================================
-# Fix EspoCRM Apache Configuration
-# Production-safe setup
-# Hostname: ktech-psa-db
+# Fix EspoCRM Apache Configuration (FAST)
 # =========================================
 
 set -e
@@ -20,7 +18,6 @@ sudo tee $APACHE_SITE > /dev/null <<'EOF'
     ServerName ktech-psa-db
 
     DocumentRoot /var/www/html/espo/public
-
     Alias /client/ /var/www/html/espo/client/
 
     <Directory /var/www/html/espo/public/>
@@ -30,8 +27,6 @@ sudo tee $APACHE_SITE > /dev/null <<'EOF'
     </Directory>
 
     <Directory /var/www/html/espo/client/>
-        Options FollowSymLinks
-        AllowOverride None
         Require all granted
     </Directory>
 
@@ -43,10 +38,11 @@ EOF
 echo "✅ Enabling site..."
 sudo a2ensite espo.conf
 
-echo "🔐 Fixing permissions..."
+echo "🔐 Fixing ownership (no recursive chmod)..."
 sudo chown -R www-data:www-data $ESPODIR
-sudo find $ESPODIR -type d -exec chmod 755 {} \;
-sudo find $ESPODIR -type f -exec chmod 644 {} \;
+sudo chmod 755 $ESPODIR
+sudo chmod 755 $ESPODIR/public
+sudo chmod 755 $ESPODIR/client
 
 echo "🔄 Restarting Apache..."
 sudo systemctl restart apache2
