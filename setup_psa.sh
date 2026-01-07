@@ -16,7 +16,7 @@ sudo apt install postgresql postgresql-contrib -y
 # --- 4. Configure PostgreSQL ---
 # NOTE: Change 'StrongPassword123' to a secure password
 DB_USER="psa_user"
-DB_PASS="SysAdmin!"
+DB_PASS="StrongPassword123"
 DB_NAME="psa_db"
 
 sudo -i -u postgres psql <<EOF
@@ -55,3 +55,4 @@ sudo systemctl restart apache2
 
 echo "✅ EspoCRM setup complete!"
 echo "Open your browser: http://$(hostname -I | awk '{print $1}')/espo to finish the web installer."
+
