@@ -18,11 +18,9 @@ GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 EOF
 # Download and unzip EspoCRM
 ESPODIR="/var/www/html/espo" && \
-sudo rm -rf $ESPODIR && sudo mkdir -p $ESPODIR && \
+sudo rm -rf $ESPODIR && \
 sudo wget -O EspoCRM.zip https://www.espocrm.com/downloads/EspoCRM-7.1.10.zip && \
-sudo unzip -o EspoCRM.zip -d /var/www/html/espo && \
-# Move contents from nested folder to /espo directly
-sudo mv $ESPODIR/EspoCRM-7.1.10/* $ESPODIR/ && sudo rm -rf $ESPODIR/EspoCRM-7.1.10 && \
+sudo unzip -o EspoCRM.zip -d $ESPODIR && \
 sudo chown -R www-data:www-data $ESPODIR && sudo chmod -R 755 $ESPODIR && \
 # Apache site config
 cat <<EOL | sudo tee /etc/apache2/sites-available/espo.conf
