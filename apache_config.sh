@@ -1,37 +1,14 @@
-#!/bin/bash
-# =========================================
-# Apache GLOBAL filesystem allow fix
-# =========================================
+# See installed PHP versions
+php -v
 
-set -e
+# Enable PHP module explicitly
+sudo a2enmod php*
 
-APACHE_MAIN="/etc/apache2/apache2.conf"
+# Ensure dir module is enabled
+sudo a2enmod dir
 
-echo "📝 Backing up apache2.conf..."
-sudo cp $APACHE_MAIN ${APACHE_MAIN}.bak
+# Force DirectoryIndex to include index.php globally
+sudo sed -i 's/DirectoryIndex .*/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
 
-echo "🔧 Appending global directory permissions..."
-
-sudo tee -a $APACHE_MAIN > /dev/null <<'EOF'
-
-# === EspoCRM Global Allow Fix ===
-<Directory /var/www/>
-    AllowOverride All
-    Require all granted
-</Directory>
-
-<Directory /var/www/html/>
-    AllowOverride All
-    Require all granted
-</Directory>
-# === End Fix ===
-
-EOF
-
-echo "🔄 Restarting Apache..."
+# Restart Apache
 sudo systemctl restart apache2
-
-echo "======================================"
-echo "✅ Apache global access fixed"
-echo "🌐 Open: http://$(hostname -I | awk '{print $1}')/"
-echo "======================================"
